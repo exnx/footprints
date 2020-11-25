@@ -8,6 +8,7 @@ from threading import Thread
 import time
 import csv
 from utils.helpers import Annotation, TimeTracker, make_clean_folder
+import concurrent.futures
 
 
 ####  Constants  #####
@@ -95,61 +96,49 @@ def make_cam_dirs(out_dir, rs_id):
 
 
 
-def save_frames(out_dir, pipeline, align, depth_scale, rs_id, run_event):
+def save_frame(img_id_num, cam_dirs, annotator, pipeline, align, depth_scale):
 
-    time.sleep(1)  # give all cameras a chance to catch up
+    depth_dir_path = cam_dirs[0]
+    color_dir_path = cam_dirs[1]
 
-    # create dirs for this camera (for frames)
-    depth_dir_path, color_dir_path = make_cam_dirs(out_dir, rs_id)
+    try:
 
-    # for a given id, only 1 annotation file needed
-    annotator = Annotation(os.path.join(out_dir, rs_id))
+        # get frames
+        frames = pipeline.wait_for_frames()
+        depth_frame = frames.get_depth_frame()
+        color_frame = frames.get_color_frame()
 
-    time_tracker = TimeTracker()
+        if not depth_frame or not color_frame:
+            raise
 
-    img_id_num = 0  # for frame names
+        # convert to np
+        color_image = np.asarray(color_frame.get_data())
+        depth_image = np.asarray(depth_frame.get_data())
 
-    while run_event.is_set():
+        # id bookeeping
+        img_id = str(img_id_num).zfill(6)
+        img_name = img_id + '.png'
 
-        try:
+        # prep for saving
+        depth_path = os.path.join(depth_dir_path, img_name)
+        color_path = os.path.join(color_dir_path, img_name)
 
-            # get frames
-            frames = pipeline.wait_for_frames()
-            depth_frame = frames.get_depth_frame()
-            color_frame = frames.get_color_frame()
+        # save images and annotations
+        cv2.imwrite(depth_path, depth_image.astype(np.uint16))
+        cv2.imwrite(color_path, color_image)
 
-            if not depth_frame or not color_frame:
-                continue
+        annotator.update(img_name)
 
-            # convert to np
-            color_image = np.asarray(color_frame.get_data())
-            depth_image = np.asarray(depth_frame.get_data())
+    except Exception as e:
 
-            # id bookeeping
-            img_id = str(img_id_num).zfill(6)
-            img_name = img_id + '.png'
-            img_id_num += 1
-
-            # prep for saving
-            depth_path = os.path.join(depth_dir_path, img_name)
-            color_path = os.path.join(color_dir_path, img_name)
-
-            # save images and annotations
-            cv2.imwrite(depth_path, depth_image.astype(np.uint16))
-            cv2.imwrite(color_path, color_image)
-
-            annotator.update(img_name)
-            time_tracker.update()
-
-        except Exception as e:
-
-            print(e)
-            print('some kind of error')
+        print(e)
+        print('some kind of error')
 
 
 
 def main(args):
 
+    ### comment this on/off to get the seial numbers of the Realsense cams
     # ctx = rs.context()
     # devices = ctx.query_devices()
 
@@ -159,6 +148,7 @@ def main(args):
 
     # print(devices)
     # exit()
+    ###
 
     # check if out_dir exists, if so, keep appending a new suffix
     count = 1
@@ -173,42 +163,44 @@ def main(args):
     # configure rs cameras (return list of pipelines and alignment objects)
     pipelines, aligns, depth_scales = config_rs_cameras(rs_cam_ids)
 
-    # for multithreading
-    run_event = threading.Event()
-    run_event.set()
-
-    threads = []
 
     print('about to start threads')
 
-    # start a new thread for each rs_id
-    for t in range(len(rs_cam_ids)):
-        # pass all parameters needed to record frames
-        thr = Thread(target=save_frames, args=(out_dir, pipelines[t], aligns[t], depth_scales[t], rs_cam_ids[t], run_event))
-        threads.append(thr)  # save handle to threads
-        thr.daemon = True
-        thr.start()
+    all_cam_dirs = []
+    annotators = []
 
+    # get annotators and cam dirs for each camera
+    for rs_id in rs_cam_ids:
+        # create dirs for this camera (for frames)
+        depth_dir_path, color_dir_path = make_cam_dirs(out_dir, rs_id)
+        all_cam_dirs.append((depth_dir_path, color_dir_path))
 
-    # listen for a keyboard interupt, then clean up
+        annotator = Annotation(os.path.join(out_dir, rs_id))
+        annotators.append(annotator)
+
+    time.sleep(1)  # make sure cameras are all initialized
+    time_tracker = TimeTracker()
+
+    img_id_num = 0  # for frame names (same id across all cams)
+
     try:
-        while 1:
-            time.sleep(.1)
+        while True:
+            
+            with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
+                futures = []
+
+                # create threads to read / write a single frame for each cam, continuously
+                for i in range(len(rs_cam_ids)):
+                    futures.append(executor.submit(save_frame, img_id_num, all_cam_dirs[i], annotators[i], pipelines[i], aligns[i], depth_scales[i]))
+
+                # make sure all frames are done to ensure time synchronozation
+                finished, pending = concurrent.futures.wait(futures, timeout=None, return_when=concurrent.futures.ALL_COMPLETED)
+
+                img_id_num += 1
+                time_tracker.update()
+
     except KeyboardInterrupt:
-
-        run_event.clear()
-
-        # clean up threads after stopping
-        for i, thr in enumerate(threads):
-            thr.join()
-            pipelines[i].stop()  # need to stop this
-        
-        print("threads successfully closed")
-
-    print('done!')
-
-
-
+        print('keyboard interupt, all DONE!')
 
 
 if __name__ == "__main__":
@@ -225,10 +217,8 @@ if __name__ == "__main__":
 
 
 '''
-mac
-python ~/Desktop/footprints/record_realsense_to_frames.py --out_dir ~/Desktop/testing_videos/run6
 
-windows
+python ~/Desktop/footprints/record_realsense_to_frames_rev1.py --out_dir ~/Desktop/testing_videos/run12 --cams 032622071103
 
 
 '''

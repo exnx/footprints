@@ -143,7 +143,7 @@ if __name__ == '__main__':
 
 '''
 
-python ~/Desktop/footprints/record_rgb_to_frames.py --out_dir ~/Desktop/testing_videos/run8 --cam_nums 0
+python ~/Desktop/footprints/record_rgb_to_frames.py --out_dir ~/Desktop/testing_videos/run11 --cam_nums 1
 
 '''
 
