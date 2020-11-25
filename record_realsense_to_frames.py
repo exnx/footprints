@@ -150,6 +150,16 @@ def save_frames(out_dir, pipeline, align, depth_scale, rs_id, run_event):
 
 def main(args):
 
+    # ctx = rs.context()
+    # devices = ctx.query_devices()
+
+    # # start realsense cameras
+    # for device in devices:
+    #     print('device', device)
+
+    # print(devices)
+    # exit()
+
     # check if out_dir exists, if so, keep appending a new suffix
     count = 1
     out_dir = args.out_dir
@@ -205,7 +215,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='record videos to frames for rgb/depth cameras')
     parser.add_argument('--out_dir', help='path to output images')
-    parser.add_argument('--cams', nargs='+', default=['032622073591', '032622070525', '032622071103'])
+    parser.add_argument('--cams', nargs='+', default=['032622073591', '032622070525', '032622071103', '844212071513'])
 
     args = parser.parse_args()
 
