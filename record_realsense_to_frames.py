@@ -215,8 +215,11 @@ if __name__ == "__main__":
 
 
 '''
-
+mac
 python ~/Desktop/footprints/record_realsense_to_frames.py --out_dir ~/Desktop/testing_videos/run6
+
+windows
+
 
 '''
 

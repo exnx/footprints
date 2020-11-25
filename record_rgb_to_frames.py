@@ -96,19 +96,17 @@ if __name__ == '__main__':
         frame_dirs.append(frame_dir)
         
         # open camera
-        cap = cv2.VideoCapture(cam_num)
-        caps.append(cap)
+        cap = cv2.VideoCapture(cam_num, cv2.CAP_DSHOW)
+        
+        if cap is None or not cap.isOpened():
+            print('Warning: unable to open video source: ', cam_num)
+            continue
+        else:
+            caps.append(cap)
+            print('Cam {} opened ok'.format(cam_num))
 
         # create annotator
         annot_path = os.path.join(cam_dir, 'annotation.csv')
-
-        # fields = ['frame_num', 'time'] 
-
-        # # create an annotator
-        # with open(annot_path, 'w') as f:
-        #     write = csv.writer(f)
-        #     write.writerow(['start time', time.time()])
-        #     write.writerow(fields)
 
         annot.append(annot_path)
 
@@ -119,8 +117,8 @@ if __name__ == '__main__':
 
     threads = []
 
-    # start threads
-    for t in range(len(args.cam_nums)):
+    # start threads for each cam that opened
+    for t in range(len(annot)):
         thr = Thread(target=record_frame, args=(caps[t], frame_dirs[t], annot[t], run_event))
         threads.append(thr)
         thr.daemon = True

@@ -8,7 +8,6 @@ import socket
 import os
 import argparse
 import tqdm
-from optflow_infer import *
 import csv
 from matplotlib.path import Path  # for making binary mask
 import pylab as plt
