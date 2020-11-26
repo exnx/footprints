@@ -1,5 +1,8 @@
 Pipeline for creating the footsteps dataset
 
+Data collected on Nov 25, 2020 is on the Desktop of the Alienware laptop under `new_videos`.
+
+
 
 For examples to run each script, see the bottom of each script.
 
@@ -65,7 +68,10 @@ mask_dir: must input the path to the mask frames to be used
 optional
 output_dir:  output path, otherwise, will go to same parent dir of (color) img frames
 
-description:  this will take the color frames and apply the masks on top, to created masked images.
+description:  Note, you need to first run the detection to create the masks before this step.  Then this will take the color frames and apply the masks on top, to created masked images.
+
+windows example:
+python apply_mask_on_rgb.py --img_dir C:\Users\GuibasLab\Desktop\new_videos\run1\032622073591\color --mask_dir C:\Users\GuibasLab\Desktop\new_videos\run1\032622073591\mask
 
 
 
@@ -79,5 +85,6 @@ run_dir:  path to the successful run to collect frames.
 description:  this will search for directories with frames and create videos.  It will make videos for color, depth, masks, masked frames in the directory of the run (no need to pass output dir).
 
 
-
+windows example:
+python frames_to_videos.py --run_dir C:\Users\GuibasLab\Desktop\new_videos\run1
 

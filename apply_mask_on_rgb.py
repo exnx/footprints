@@ -19,8 +19,13 @@ def main(args):
     out_dir_path = os.path.join(up_dir_name, 'masked')
     make_clean_folder(out_dir_path)
 
+    print('creating masked images...')
+
     # loop thru images
     for i in range(len(img_list)-1):
+
+        if i % 100 == 0:
+            print('{} masked images completed'.format(i))
 
         img_path = img_list[i]
         file_name = os.path.basename(img_path)
