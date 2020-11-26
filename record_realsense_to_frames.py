@@ -25,8 +25,12 @@ color_height = 540
 color_width = 960
 
 
-depth_height = 360
-depth_width = 640
+# depth_height = 360
+# depth_width = 640
+
+
+depth_height = 480
+depth_width = 848
 
 #######################
 
@@ -186,7 +190,8 @@ def main(args):
     try:
         while True:
             
-            with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
+            # use 5 threads by default
+            with concurrent.futures.ThreadPoolExecutor(max_workers=args.num_threads) as executor:
                 futures = []
 
                 # create threads to read / write a single frame for each cam, continuously
@@ -208,6 +213,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='record videos to frames for rgb/depth cameras')
     parser.add_argument('--out_dir', help='path to output images')
     parser.add_argument('--cams', nargs='+', default=['032622073591', '032622070525', '032622071103', '844212071513'])
+    arser.add_argument('--num_threads', default=5, help='number of threads to use for recording frames')
 
     args = parser.parse_args()
 
@@ -218,7 +224,7 @@ if __name__ == "__main__":
 
 '''
 
-python ~/Desktop/footprints/record_realsense_to_frames_rev1.py --out_dir ~/Desktop/testing_videos/run12 --cams 032622071103
+python ~/Desktop/footprints/record_realsense_to_frames.py --out_dir ~/Desktop/testing_videos/run12 --cams 032622071103
 
 
 '''

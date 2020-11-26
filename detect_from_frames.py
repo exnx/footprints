@@ -133,10 +133,13 @@ def main(args):
 
     image_list.sort()
 
-    print('starting frames loop')
+    print('creating masks...')
 
     # loop thru until len-1, starting with 2nd img
     for i in range(len(image_list)):
+
+        if i % 100 == 0:
+            print('{} masks completed'.format(i))
 
         img_name1 = os.path.basename(image_list[i])
         img_path1 = os.path.join(args.input_dir, img_name1)

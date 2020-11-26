@@ -8,7 +8,10 @@ use conda environment, on Windows Alienware machine, use:
 
 `conda activate py37`
 
-requires `opencv-contrib` version for Aruco marker detection
+requires `opencv-contrib` version for Aruco marker detection, as well as Pysense (the Realsense library for Python).
+See online for how to install these, or just the default environment above.
+
+Note, on Windows Alienware, you need to use the Anaconda Prompt specifically.  ie, in the search menu bottom left, type Anaconda, and select the Anaconda Prompt.  You can then activate the environment as usual and run the scripts.
 
 
 
@@ -27,20 +30,9 @@ optional
 description:  this will record the realsense rgb-d cameras on separate threads.  It will create annotations with timestamps 
 for each frame collected on each camera, in their respective camera id directories.
 
+windows example:
+`python record_realsense_to_frames.py --out_dir C:\Users\GuibasLab\Desktop\tmp_videos\run1`
 
-
-1a) Record with RGB cameras
-
-`record_rgb_to_frames.py`
-
-flags
---out_dir:  where to output the frames
-
-optional
---cam_nums:  the usb cam number, e.g., 0, 1, 2
-
-description:  this will record the rgb cameras on separate threads.  It will create annotations with timestamps 
-for each frame collected on each camera, in their respective camera id directories.
 
 
 
@@ -54,7 +46,11 @@ input_dir:  path to the color frames of the camera pointing at the shoes
 optional
 output_dir:  output path, otherwise, will go to same parent dir of input frames
 
-description:  this will take the color frames and detect the aruco markers, and create masks in a separate directory.
+description:  this will take the color frames and detect the aruco markers, and create masks in a separate directory.  Note, each run only has 1 camera that has detectable footprints.  So you'll need to find this folder (using color frames) for each run, but likely the camera serial number will be the only thing that changes.  So use the command line below, just changing the run number. e.g., run1, run2, run3 etc.
+
+windows example:
+python detect_from_frames.py --input_dir C:\Users\GuibasLab\Desktop\new_videos\run3\032622073591\color
+
 
 
 
@@ -80,7 +76,7 @@ description:  this will take the color frames and apply the masks on top, to cre
 flags:
 run_dir:  path to the successful run to collect frames.  
 
-description:  this will search for directories with frames and create videos.  It will make videos for color, depth, masks, masked frames.
+description:  this will search for directories with frames and create videos.  It will make videos for color, depth, masks, masked frames in the directory of the run (no need to pass output dir).
 
 
 
